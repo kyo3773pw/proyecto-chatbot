@@ -17,9 +17,9 @@ function RegisterPage() {
         if (isAuthenticated) navigate("/tasks");
     }, [isAuthenticated])
 
-    const onSubmit = async (values) => {
+    const onSubmit = handleSubmit(async (values) => {
         await signup(values);
-    };
+    });
 
     return (
         <div className="flex h-[calc(100vh-100px)] items-center justify-center">
