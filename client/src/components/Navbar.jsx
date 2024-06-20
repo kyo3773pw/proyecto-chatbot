@@ -18,6 +18,13 @@ function Navbar() {
                         <li>
                             Welcome {user.username}
                         </li>
+
+                        <li>
+                            <Link to='/chatbot'
+                            className="bg-sky-500 px-4 py-1 rounded-sm"
+                            >Chat</Link>
+                        </li>
+
                         <li>
                             <Link to='/add-task'
                             className="bg-sky-500 px-4 py-1 rounded-sm"

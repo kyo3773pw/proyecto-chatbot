@@ -7,6 +7,7 @@ import TasksPage from "./pages/TasksPage";
 import TaskFormPage from "./pages/TaskFormPage";
 import ProfilePage from "./pages/ProfilePage";
 import HomePage from "./pages/HomePage";
+import ChatbotPage from "./pages/Chatbotpage";
 
 import  ProtectedRoute  from "./ProtectedRoute";
 import { TaskProvider } from "./context/TasksContext";
@@ -29,6 +30,7 @@ function App() {
             <Route path="/add-task" element={<TaskFormPage />} />
             <Route path="/tasks/:id" element={<TaskFormPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/chatbot" element={<ChatbotPage />} />
           </Route>
         </Routes>
       </main>
