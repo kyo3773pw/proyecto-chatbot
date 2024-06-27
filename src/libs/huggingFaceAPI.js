@@ -1,13 +1,10 @@
-// src/libs/huggingFaceAPI.js
+import axios from 'axios';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Cargar las variables de entorno desde el archivo .env en el directorio raíz
-dotenv.config({ path: path.resolve('./.env') });
+//dotenv.config({ path: path.resolve(__dirname, '../libs/.env') });
 
-import axios from 'axios';
-
-const HUGGING_FACE_API_KEY = process.env.HUGGING_FACE_API_KEY;
+const HUGGING_FACE_API_KEY = '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';
 
 if (!HUGGING_FACE_API_KEY) {
     console.error('HUGGING_FACE_API_KEY is not set');
@@ -22,12 +19,15 @@ const apiClient = axios.create({
 });
 
 export const queryModel = async (inputs) => {
-    const model = 'facebook/blenderbot-400M-distill'; // Especifica el modelo aquí
-    const prompt = `The following is a conversation with an AI assistant. The assistant is helpful, creative, clever, and very friendly.\n\nHuman: ${inputs}\nAI:`;
+    const model = 'mistralai/Mistral-7B-Instruct-v0.3'; // Especifica el modelo aquí
 
     try {
-        const response = await apiClient.post(`/${model}`, { inputs: prompt });
-        return response.data;
+        const postData = {
+            inputs // Instrucción sin modificaciones
+        };
+
+        const response = await apiClient.post(`/${model}`, postData);
+        return response.data; // Devuelve la respuesta completa
     } catch (error) {
         console.error('Error querying the Hugging Face API:', error.response ? error.response.data : error.message);
         throw error;

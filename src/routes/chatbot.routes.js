@@ -1,9 +1,9 @@
 // src/routes/chatbot.routes.js
-import express from 'express';
-import { getChatbotResponse } from '../controllers/chatbot.controller.js';
+import { Router } from 'express';
+import { handleQuery } from '../controllers/chatbot.controller.js';
 
-const router = express.Router();
+const router = Router();
 
-router.post('/chatbot', getChatbotResponse);
+router.post('/chatbot', handleQuery); // Esta ruta debe coincidir con la URL en el frontend
 
 export default router;

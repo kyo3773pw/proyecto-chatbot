@@ -1,9 +1,8 @@
+// src/app.js
 import express from 'express';
 import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-
-//import 'dotenv/config';
 
 import authRoutes from './routes/auth.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
@@ -12,7 +11,7 @@ import chatbotRoutes from './routes/chatbot.routes.js';
 const app = express();
 
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:5173', // Ajusta esto según tu configuración de frontend
     credentials: true
 }));
 app.use(morgan('dev'));
