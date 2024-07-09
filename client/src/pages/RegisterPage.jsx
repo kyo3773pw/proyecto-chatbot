@@ -14,8 +14,8 @@ function RegisterPage() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (isAuthenticated) navigate("/tasks");
-    }, [isAuthenticated])
+        if (isAuthenticated) navigate("/chatbot"); // Redirige al chatbot después de registrarse
+    }, [isAuthenticated, navigate]);
 
     const onSubmit = handleSubmit(async (values) => {
         await signup(values);

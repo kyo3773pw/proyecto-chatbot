@@ -1,54 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { sendMessage } from '../api/chatbot';
 import './Chatbot.css';
 
 const Chatbot = () => {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
+    const [isGreeting, setIsGreeting] = useState(true);
 
-    useEffect(() => {
-        // Prompt inicial
-        const initialMessage = { sender: 'bot', text: 'Bienvenido al chatbot universitario' };
-        setMessages([initialMessage]);
-    }, []);
+    const handleSendMessage = async (event) => {
+        if (event.key === 'Enter' && input.trim()) {
+            const newMessage = { sender: 'user', text: input };
+            setMessages([...messages, newMessage]);
 
-    const handleSend = async () => {
-        if (input.trim() === '') return;
+            let botResponse;
+            if (isGreeting) {
+                botResponse = "Hola! ¿En qué puedo ayudarte hoy? Puedes preguntar sobre congresos, becas, cursos, etc.";
+                setIsGreeting(false);  // Cambiar estado después de saludo inicial
+            } else {
+                const type = input.toLowerCase().includes('congreso') ? 'congresos' : 
+                             input.toLowerCase().includes('beca') ? 'becas' : 
+                             input.toLowerCase().includes('curso') ? 'cursos' : 'event';
 
-        const userMessage = { sender: 'user', text: input };
-        setMessages([...messages, userMessage]);
+                botResponse = await sendMessage(input, type);
+            }
 
-        try {
-            const botReply = await sendMessage(input);
-            const botMessage = { sender: 'bot', text: botReply };
-            setMessages((prevMessages) => [...prevMessages, botMessage]);
-        } catch (error) {
-            const errorMessage = { sender: 'bot', text: 'Error: Unable to communicate with the chatbot.' };
-            setMessages((prevMessages) => [...prevMessages, errorMessage]);
+            setMessages([...messages, newMessage, { sender: 'bot', text: botResponse }]);
+            setInput('');
         }
-
-        setInput('');
     };
 
     return (
         <div className="chatbot-container">
-            <div className="messages-container">
-                {messages.map((msg, index) => (
-                    <div key={index} className={`message ${msg.sender}`}>
-                        <div className="message-content">{msg.text}</div>
+            <h1 className="chatbot-title">Ask annie</h1>
+            <div className="chat-window">
+                {messages.map((message, index) => (
+                    <div key={index} className={`message ${message.sender}`}>
+                        <span className="message-sender">{message.sender === 'user' ? '📷' : '🤖'}</span>
+                        <span className="message-text">{message.text}</span>
                     </div>
                 ))}
             </div>
-            <div className="input-container">
+            <div className="input-area">
                 <input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Type a message..."
-                    className="input-field"
+                     type="text"
+                     value={input}
+                     onChange={(e) => setInput(e.target.value)}
+                     onKeyPress={handleSendMessage}
+                     placeholder="Type your message here"
                 />
-                <button onClick={handleSend} className="send-button">Send</button>
+                <button onClick={handleSendMessage}>➤</button>
             </div>
         </div>
     );

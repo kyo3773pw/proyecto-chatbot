@@ -19,15 +19,15 @@ const apiClient = axios.create({
 });
 
 export const queryModel = async (inputs) => {
-    const model = 'mistralai/Mistral-7B-Instruct-v0.3'; // Especifica el modelo aquí
+    const model = 'mistralai/Mistral-7B-Instruct-v0.1';
 
     try {
         const postData = {
-            inputs // Instrucción sin modificaciones
+            inputs
         };
 
         const response = await apiClient.post(`/${model}`, postData);
-        return response.data; // Devuelve la respuesta completa
+        return response.data;
     } catch (error) {
         console.error('Error querying the Hugging Face API:', error.response ? error.response.data : error.message);
         throw error;

@@ -15,10 +15,11 @@ function LoginPage() {
     const onSubmit = handleSubmit((data) => {
         signin(data);
     });
-    useEffect(() =>{
-        if(isAuthenticated) navigate("/tasks");
-    }, [isAuthenticated])
-
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate("/chatbot"); // Redirige al chatbot después de iniciar sesión
+        }
+    }, [isAuthenticated, navigate]);
     return (
         <div className="flex h-[calc(100vh-100px)] items-center justify-center">
             <div className="bg-zinc-800 max-w-md w-full p-10  rounded-md">
