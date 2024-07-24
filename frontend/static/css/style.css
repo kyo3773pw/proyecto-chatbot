@@ -1,0 +1,81 @@
+body {
+    background: linear-gradient(to bottom, #2AE309, #ffffff);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+    background-attachment: fixed;
+}
+
+.navbar {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    z-index: 10;
+    background-color: #1c8b0c;  /* Color verde oscuro */
+    border-bottom: 3px solid #16a085;  /* Añadir un borde para darle un poco de estilo */
+}
+
+.navbar .navbar-brand, .navbar .nav-link {
+    color: #fff;
+}
+
+.navbar .nav-link:hover {
+    color: #f1c40f;  /* Un color amarillo claro para el hover */
+}
+
+.container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    max-width: 800px;
+    width: 100%;
+    margin-top: 70px; /* To ensure the container is not covered by the navbar */
+}
+
+.card {
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.img-fluid {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+}
+
+.row {
+    margin: 0;
+}
+
+.col-md-6 {
+    padding: 0;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: bold;
+}
+
+.btn-block {
+    background-color: #1c8b0c;
+    border-color: #1c8b0c;
+    color: #fff;
+}
+
+.btn-block:hover {
+    background-color: #2AE309;
+    border-color: #2AE309;
+}

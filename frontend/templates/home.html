@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+<div class="chat-container">
+    <div class="annie-bot-title">annie-bot</div>
+    <div class="message-section">
+        <div class="message-bubble">
+            <p>hola, sobre que tipo de eventos te gustaria averiguar</p>
+        </div>
+        <div class="bubble-container">
+            <div class="button-bubble" onclick="window.location.href='/events/cursos'">
+                <h5 class="card-title">cursos</h5>
+                <p class="card-text">lista desplegable al hacer click al boton</p>
+            </div>
+            <div class="button-bubble" onclick="window.location.href='/events/congresos'">
+                <h5 class="card-title">congresos</h5>
+                <p class="card-text">lista desplegable al hacer click al boton</p>
+            </div>
+            <div class="button-bubble" onclick="window.location.href='/events/becas'">
+                <h5 class="card-title">becas</h5>
+                <p class="card-text">lista desplegable al hacer click al boton</p>
+            </div>
+        </div>
+    </div>
+    <div class="image-section">
+        <img src="{{ url_for('static', filename='images/bot.png') }}" class="img-fluid" alt="IMAGEN">
+    </div>
+</div>
+{% endblock %}

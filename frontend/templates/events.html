@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/events.css') }}">
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <h1 class="text-center">Estos son los {{ event_type | capitalize }} que tengo registrados</h1>
+            <div class="event-list">
+                {% for event in events %}
+                <div class="event-item">
+                    <h3>{{ event.nombre }}</h3>
+                    <p><a href="{{ event.url_registro }}" target="_blank" class="btn btn-primary">Registro</a></p>
+                </div>
+                {% else %}
+                <div class="event-item">
+                    No events found for {{ event_type }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <img src="{{ url_for('static', filename='images/bot.png') }}" alt="Imagen" class="img-fluid">
+        </div>
+    </div>
+</div>
+{% endblock %}
