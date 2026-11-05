@@ -1,0 +1,81 @@
+import { dbSkipReason, testDbUri } from './helpers.js';
+import assert from 'node:assert/strict';
+import { after, before, describe, it } from 'node:test';
+import bcrypt from 'bcryptjs';
+import mongoose from 'mongoose';
+import request from 'supertest';
+
+const { createApp } = await import('../src/app.js');
+const { connectDb, disconnectDb } = await import('../src/db.js');
+const { User } = await import('../src/models/user.model.js');
+const { Event } = await import('../src/models/event.model.js');
+
+const URL = '/api/admin/events';
+const beca = { nombre: 'Beca de prueba', type: 'beca', ambito: 'nacional', fecha_limite: '2026-12-01', fecha_captura: '2026-11-05', origen: 'sintetico' };
+
+describe('API de eventos (admin)', { skip: dbSkipReason }, () => {
+    const app = createApp();
+    const admin = request.agent(app);
+    const user = request.agent(app);
+
+    async function clearDb() {
+        const collections = await mongoose.connection.db.collections();
+        await Promise.all(collections.map(c => c.deleteMany({})));
+    }
+
+    // Crea el usuario directo en la base (no hay endpoint para ser admin) y deja su sesión en el agente.
+    async function loginAs(agent, email, role) {
+        const passwordHash = await bcrypt.hash('clave-de-prueba', 4);
+        await User.create({ email, passwordHash, role });
+        await agent.post('/api/auth/login').send({ email, password: 'clave-de-prueba' }).expect(200);
+    }
+
+    before(async () => {
+        await connectDb(testDbUri);
+        await clearDb();
+        await Event.init(); // espera a que exista el índice único antes de probar duplicados
+        await loginAs(admin, 'admin@prueba.com', 'admin');
+        await loginAs(user, 'user@prueba.com', 'user');
+    });
+    after(async () => {
+        try {
+            await clearDb();
+        } finally {
+            await disconnectDb();
+        }
+    });
+
+    it('sin sesión -> 401', async () => {
+        await request(app).get(URL).expect(401);
+    });
+
+    it('usuario normal -> 403', async () => {
+        await user.post(URL).send(beca).expect(403);
+    });
+
+    it('admin crea un evento válido -> 201 e ignora _id del cliente', async () => {
+        const fakeId = new mongoose.Types.ObjectId().toString();
+        const res = await admin.post(URL).send({ ...beca, _id: fakeId }).expect(201);
+        assert.equal(res.body.event.nombre, beca.nombre);
+        assert.notEqual(res.body.event._id, fakeId);
+    });
+
+    it('mismo nombre y fecha_inicio -> 409', async () => {
+        await admin.post(URL).send(beca).expect(409);
+    });
+
+    it('evento inválido -> 400 con los campos', async () => {
+        // Sin fecha_limite falla la regla de beca y también la de "fecha_fin o fecha_limite".
+        const res = await admin.post(URL).send({ ...beca, nombre: 'Otra beca', fecha_limite: undefined }).expect(400);
+        assert.deepEqual(res.body.detalles.map(d => d.campo).sort(), ['fecha_fin', 'fecha_limite']);
+    });
+
+    it('POST sin cuerpo -> 400, no 500', async () => {
+        await admin.post(URL).expect(400);
+    });
+
+    it('admin lista los eventos', async () => {
+        const res = await admin.get(URL).expect(200);
+        assert.equal(res.body.events.length, 1);
+    });
+});

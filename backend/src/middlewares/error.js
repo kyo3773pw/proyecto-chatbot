@@ -8,6 +8,11 @@ export function notFound(req, res) {
 export function errorHandler(err, req, res, next) {
     if (err.type === 'entity.parse.failed') return res.status(400).json({ error: 'JSON inválido' });
     if (err.type === 'entity.too.large') return res.status(413).json({ error: 'Cuerpo demasiado grande' });
+    if (err.name === 'ValidationError') {
+        const detalles = Object.values(err.errors).map(e => ({ campo: e.path, mensaje: e.message }));
+        return res.status(400).json({ error: 'Datos inválidos', detalles });
+    }
+    if (err.code === 11000) return res.status(409).json({ error: 'Registro duplicado' });
 
     console.error(err);
     res.status(500).json({ error: 'Error interno', ...(config.isProduction ? {} : { detalle: err.message }) });

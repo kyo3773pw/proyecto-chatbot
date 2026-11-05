@@ -9,7 +9,7 @@
     "scripts": {
         "dev": "node --watch --env-file=.env src/server.js",
         "start": "node src/server.js",
-        "test": "node --env-file=.env --test \"tests/*.test.js\"",
+        "test": "node --env-file=.env --test --test-concurrency=1 \"tests/*.test.js\"",
         "make-admin": "node --env-file=.env scripts/make-admin.mjs"
     },
     "dependencies": {

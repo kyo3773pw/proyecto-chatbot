@@ -4,6 +4,7 @@ import express from 'express';
 import { config } from './config.js';
 import { errorHandler, notFound } from './middlewares/error.js';
 import { authRouter } from './routes/auth.routes.js';
+import { eventRouter } from './routes/event.routes.js';
 
 export function createApp() {
     const app = express();
@@ -15,7 +16,7 @@ export function createApp() {
 
     app.get('/api/health', (req, res) => res.json({ ok: true }));
     app.use('/api/auth', authRouter);
-
+    app.use('/api/admin/events', eventRouter);
     app.use(notFound);
     app.use(errorHandler);
     return app;
