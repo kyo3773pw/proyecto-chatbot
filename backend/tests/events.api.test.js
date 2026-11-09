@@ -78,4 +78,30 @@ describe('API de eventos (admin)', { skip: dbSkipReason }, () => {
         const res = await admin.get(URL).expect(200);
         assert.equal(res.body.events.length, 1);
     });
+
+    describe('POST /import', () => {
+        const IMPORT = `${URL}/import`;
+        const csv = 'nombre,type,ambito,fecha_limite,fecha_captura,origen\nBeca importada,beca,nacional,2026-12-01,2026-11-09,real\n';
+
+        it('usuario normal -> 403', async () => {
+            await user.post(IMPORT).send({ csv }).expect(403);
+        });
+
+        it('sin csv o csv que no es texto -> 400', async () => {
+            await admin.post(IMPORT).send({}).expect(400);
+            await admin.post(IMPORT).send({ csv: 123 }).expect(400);
+        });
+
+        it('vista previa y confirmar "true" como texto no guardan', async () => {
+            const previa = await admin.post(IMPORT).send({ csv }).expect(200);
+            assert.equal(previa.body.informe.resumen.crear, 1);
+            await admin.post(IMPORT).send({ csv, confirmar: 'true' }).expect(200);
+            assert.equal(await Event.countDocuments({ nombre: 'Beca importada' }), 0);
+        });
+
+        it('confirmar: true guarda', async () => {
+            await admin.post(IMPORT).send({ csv, confirmar: true }).expect(200);
+            assert.equal(await Event.countDocuments({ nombre: 'Beca importada' }), 1);
+        });
+    });
 });

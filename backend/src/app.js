@@ -1,6 +1,7 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { errorHandler, notFound } from './middlewares/error.js';
 import { authRouter } from './routes/auth.routes.js';
@@ -14,6 +15,8 @@ export function createApp() {
     app.use(express.json({ limit: '100kb' }));
     app.use(cookieParser());
 
+    // Páginas estáticas (admin.html) en el mismo origen que la API, para que la cookie de sesión funcione sin CORS.
+    app.use(express.static(fileURLToPath(new URL('../public', import.meta.url))));
     app.get('/api/health', (req, res) => res.json({ ok: true }));
     app.use('/api/auth', authRouter);
     app.use('/api/admin/events', eventRouter);
