@@ -42,8 +42,8 @@ describe('Event: reglas que deben rechazar', () => {
     it('beca sin fecha_limite', async () => {
         assert.deepEqual(await camposConError({ ...base, nombre: 'Beca', type: 'beca', fecha_fin: '2026-12-01' }), ['fecha_limite']);
     });
-    it('curso sin modalidad', async () => {
-        assert.deepEqual(await camposConError({ ...curso, modalidad: undefined }), ['modalidad']);
+    it('curso sin modalidad es válido (la fuente puede no decirla)', async () => {
+        assert.deepEqual(await camposConError({ ...curso, modalidad: undefined }), []);
     });
     it('fecha_fin antes de fecha_inicio', async () => {
         assert.deepEqual(await camposConError({ ...curso, fecha_fin: '2026-10-01' }), ['fecha_fin']);

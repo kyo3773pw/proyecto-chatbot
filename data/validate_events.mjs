@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Uso: node validate_events.mjs [archivo.csv] [--hoy YYYY-MM-DD]
 import { readFileSync } from 'node:fs';
+import { parseCsv } from '../backend/src/csv.js';
 
 const COLUMNS = ['nombre', 'type', 'ambito', 'pais_elegible', 'fecha_inicio', 'fecha_fin', 'hora', 'lugar', 'modalidad',
     'requisitos', 'costo', 'fecha_limite', 'contacto', 'notas', 'url_registro', 'fuente_url', 'fecha_captura', 'origen'];
@@ -12,29 +13,6 @@ const ENUMS = {
     origen: ['real', 'sintetico'],
 };
 
-function parseCsv(text) {
-    const rows = [];
-    let row = [], field = '', quoted = false;
-    text = text.replace(/^﻿/, '');
-    for (let i = 0; i < text.length; i++) {
-        const c = text[i];
-        if (quoted) {
-            if (c === '"' && text[i + 1] === '"') { field += '"'; i++; }
-            else if (c === '"') quoted = false;
-            else field += c;
-        } else if (c === '"') quoted = true;
-        else if (c === ',') { row.push(field); field = ''; }
-        else if (c === '\n' || c === '\r') {
-            if (c === '\r' && text[i + 1] === '\n') i++;
-            row.push(field); field = '';
-            if (row.some(v => v.trim() !== '')) rows.push(row);
-            row = [];
-        } else field += c;
-    }
-    row.push(field);
-    if (row.some(v => v.trim() !== '')) rows.push(row);
-    return rows;
-}
 
 function isValidDate(s) {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return false;
@@ -83,7 +61,7 @@ if (!missingCols.length) {
         if (isValidDate(e.fecha_inicio) && isValidDate(e.fecha_fin) && e.fecha_fin < e.fecha_inicio)
             err('fecha_fin es anterior a fecha_inicio');
         if (e.hora && !/^([01]\d|2[0-3]):[0-5]\d$/.test(e.hora)) err(`hora="${e.hora}" debe ser HH:MM (24 h)`);
-        if (isValidDate(e.fecha_limite) && isValidDate(e.fecha_inicio) && e.fecha_limite > e.fecha_fin)
+        if (isValidDate(e.fecha_limite) && isValidDate(e.fecha_fin) && e.fecha_limite > e.fecha_fin)
             err('fecha_limite es posterior a fecha_fin');
         if (e.url_registro && !isHttpUrl(e.url_registro)) err('url_registro no es una URL http(s)');
         if (e.fuente_url && !isHttpUrl(e.fuente_url)) err('fuente_url no es una URL http(s)');

@@ -22,7 +22,7 @@ const eventSchema = new mongoose.Schema(
         ambito: { type: String, required: true, enum: AMBITOS },
         dirigido_a: texto,
         pais_elegible: [{ type: String, trim:true }],
-        modalidad: { type: String, enum: MODALIDADES, required: esTipo('curso_extracurricular') },
+        modalidad: { type: String, enum: MODALIDADES, },
         lugar: texto,
         fecha_inicio: { type: Date, required: esTipo('congreso', 'curso_extracurricular') },
         fecha_fin: { type: Date, required: esTipo('congreso', 'curso_extracurricular') },
