@@ -1,5 +1,6 @@
 # Carga de eventos desde CSV
-Estado: acordado (2026-11-09)
+Estado: hecho (2026-11-09). Página: /admin.html. API: POST /api/admin/events/import `{ csv, confirmar }` → `{ informe: { resumen, filas } }`.
+Cambios respecto de lo acordado: `modalidad` pasó a opcional en cursos (la fuente puede no decirla). Límite conocido: la carga no borra eventos ausentes del CSV; borrar es manual.
 
 **Problema:** el admin necesita cargar muchos eventos a la vez desde el navegador, sin terminal y sin duplicar.
 
