@@ -29,12 +29,4 @@ Las columnas coinciden con el modelo `Event` (`backend/src/models/event.model.js
 ## Cargar a la base
 Con el backend corriendo (`npm run dev` en `backend/`), abrir `http://localhost:3000/admin.html` como admin, subir el CSV, revisar la vista previa y confirmar. La vista previa valida con las reglas del modelo. La carga crea y actualiza; no borra eventos que falten en el CSV.
 
-## Validar (sin backend)
-Desde `chatbot-eventos/`:
-```
-node data/validate_events.mjs data/events_seed.csv
-node data/validate_events.mjs data/events_seed.csv --hoy 2025-03-15    # cuenta vigentes/vencidos a esa fecha
-```
 Vigente = `fecha_fin` (o `fecha_limite` si no hay fechas del evento) >= hoy.
-
-Sale con código 1 si hay errores. Usa el lector de `backend/src/csv.js`; no necesita `npm install`. Sus reglas son más estrictas que las del modelo (exige `fuente_url` en eventos reales).

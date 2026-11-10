@@ -16,4 +16,6 @@ export const config = {
     jwtSecret,
     jwtExpiresIn: process.env.JWT_EXPIRES_IN || '1d',
     corsOrigin: required('CORS_ORIGIN'),
+    geminiApiKey: process.env.GEMINI_API_KEY,
+    llmModel: process.env.LLM_MODEL,
 };
