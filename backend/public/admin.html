@@ -12,6 +12,13 @@
         .error { color: #b00020; }
         .crear { background: #e8f5e9; } .actualizar { background: #fff8e1; } .error-fila { background: #fdecea; }
         [hidden] { display: none; }
+        #form-evento { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px 16px; }
+        #form-evento label { display: flex; flex-direction: column; font-size: 14px; }
+        #form-evento .ancho { grid-column: 1 / -1; }
+        textarea { width: 100%; box-sizing: border-box; }
+        .sospechoso { outline: 2px solid #e65100; background: #fff3e0; }
+        .invalido { outline: 2px solid #b00020; }
+        .aviso { font-size: 12px; color: #b00020; }
     </style>
 </head>
 <body>
@@ -34,6 +41,37 @@
         <button id="previa" type="button" disabled>Vista previa</button>
         <button id="confirmar" type="button" disabled>Confirmar y guardar</button>
         <div id="resultado"></div>
+    </section>
+
+    <section id="evento" hidden>
+        <h2>Cargar un evento</h2>
+        <p>Pega el texto de un post y pulsa "Extraer", o llena el formulario a mano. Nada se guarda hasta pulsar "Guardar evento".</p>
+        <textarea id="texto-post" rows="6" maxlength="10000" placeholder="Texto del post o póster (un solo evento)"></textarea>
+        <button id="extraer" type="button">Extraer con LLM</button>
+        <p id="mensaje-evento" role="status"></p>
+        <form id="form-evento" novalidate>
+            <label class="ancho">nombre *<input name="nombre" maxlength="200"></label>
+            <label>type *<select name="type"><option></option><option>congreso</option><option>beca</option><option>curso_extracurricular</option><option>otro</option></select></label>
+            <label>ambito *<select name="ambito"><option></option><option>universidad</option><option>nacional</option><option>internacional</option><option>externo</option></select></label>
+            <label>modalidad<select name="modalidad"><option></option><option>presencial</option><option>virtual</option><option>hibrido</option></select></label>
+            <label>fecha_inicio<input name="fecha_inicio" type="date"></label>
+            <label>fecha_fin<input name="fecha_fin" type="date"></label>
+            <label>fecha_limite (cierre de inscripción)<input name="fecha_limite" type="date"></label>
+            <label>hora<input name="hora" type="time"></label>
+            <label>lugar<input name="lugar"></label>
+            <label>costo<input name="costo"></label>
+            <label>pais_elegible (separados por coma)<input name="pais_elegible"></label>
+            <label class="ancho">dirigido_a<input name="dirigido_a"></label>
+            <label class="ancho">requisitos<textarea name="requisitos" rows="2"></textarea></label>
+            <label class="ancho">otras_fechas (descripción=AAAA-MM-DD; …)<input name="otras_fechas"></label>
+            <label class="ancho">contacto<input name="contacto"></label>
+            <label class="ancho">notas<textarea name="notas" rows="3"></textarea></label>
+            <label class="ancho">url_registro<input name="url_registro" type="url"></label>
+            <label class="ancho">fuente_url (enlace del post de donde sale el dato)<input name="fuente_url" type="url"></label>
+            <label>fecha_captura *<input name="fecha_captura" type="date"></label>
+            <label>origen *<select name="origen"><option>real</option><option>sintetico</option></select></label>
+            <div class="ancho"><button>Guardar evento</button> <button id="limpiar" type="button">Limpiar</button></div>
+        </form>
     </section>
 
     <section>
@@ -85,6 +123,7 @@
             const { status, datos } = await api('GET', '/api/auth/me');
             $('login').hidden = status === 200;
             $('carga').hidden = status !== 200;
+            $('evento').hidden = status !== 200;
             if (status !== 200) return;
             $('usuario').textContent = `${datos.user.email} (${datos.user.role})`;
             if (datos.user.role !== 'admin') mostrar('Tu usuario no es admin: no podrás cargar eventos.', true);
@@ -157,6 +196,101 @@
             $('resultado').replaceChildren(tabla);
         }
 
+        // --- Formulario de un evento (extracción con LLM + revisión humana) ---
+        const formEvento = $('form-evento');
+        const hoyPeru = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Lima' });
+
+        function mensajeEvento(texto, esError = false) {
+            $('mensaje-evento').textContent = texto;
+            $('mensaje-evento').className = esError ? 'error' : '';
+        }
+
+        // Quita marcas y avisos de la extracción o de un guardado anterior.
+        function limpiarMarcas() {
+            formEvento.querySelectorAll('.sospechoso, .invalido').forEach(el => el.classList.remove('sospechoso', 'invalido'));
+            formEvento.querySelectorAll('.aviso').forEach(el => el.remove());
+        }
+
+        function marcar(campo, clase, texto) {
+            const control = formEvento.elements[campo];
+            if (!control) return;
+            control.classList.add(clase);
+            const aviso = document.createElement('span');
+            aviso.className = 'aviso';
+            aviso.textContent = texto;
+            control.after(aviso);
+        }
+
+        function limpiarFormulario() {
+            formEvento.reset();
+            limpiarMarcas();
+            formEvento.elements.fecha_captura.value = hoyPeru();
+        }
+
+        // Llena el formulario con el evento extraído. Listas a texto con el mismo formato del CSV.
+        function llenarFormulario(evento) {
+            limpiarFormulario();
+            for (const control of formEvento.elements) {
+                if (!control.name || evento[control.name] === undefined) continue;
+                const valor = evento[control.name];
+                if (control.name === 'pais_elegible') control.value = valor.join(', ');
+                else if (control.name === 'otras_fechas') control.value = valor.map(f => `${f.descripcion}=${f.fecha}`).join('; ');
+                else control.value = valor;
+            }
+        }
+
+        // Formulario -> datos para POST /api/admin/events. Mismas reglas que filaAEvento del backend:
+        // vacío = ausente, países separados por coma, otras_fechas "descripción=fecha; …".
+        function leerFormulario() {
+            const datos = {};
+            for (const [campo, valor] of new FormData(formEvento)) {
+                if (valor.trim() !== '') datos[campo] = valor.trim();
+            }
+            const separar = (texto, sep) => texto.split(sep).map(s => s.trim()).filter(s => s !== '');
+            if (datos.pais_elegible) datos.pais_elegible = separar(datos.pais_elegible, ',');
+            if (datos.otras_fechas) {
+                datos.otras_fechas = separar(datos.otras_fechas, ';').map(par => {
+                    const [descripcion, fecha] = par.split('=').map(s => s.trim());
+                    return { descripcion, fecha };
+                });
+            }
+            return datos;
+        }
+
+        $('extraer').addEventListener('click', async () => {
+            const texto = $('texto-post').value;
+            if (!texto.trim()) return mensajeEvento('Pega primero el texto del post.', true);
+            $('extraer').disabled = true;
+            mensajeEvento('Consultando al LLM…');
+            try {
+                const { status, datos } = await api('POST', '/api/admin/events/extract', { texto });
+                if (status !== 200) return mensajeEvento(datos.error || `Error ${status}`, true);
+                llenarFormulario(datos.evento);
+                datos.sospechosos.forEach(campo => marcar(campo, 'sospechoso', 'No aparece en el texto: revísalo'));
+                mensajeEvento(datos.sospechosos.length
+                    ? `Extraído. Revisa los campos marcados (${datos.sospechosos.length}) y todo lo demás antes de guardar.`
+                    : 'Extraído. Revisa todos los campos antes de guardar: el LLM puede deducir datos que el post no dice.');
+            } finally {
+                $('extraer').disabled = false;
+            }
+        });
+
+        formEvento.addEventListener('submit', async e => {
+            e.preventDefault();
+            limpiarMarcas();
+            const { status, datos } = await api('POST', '/api/admin/events', leerFormulario());
+            if (status === 201) {
+                limpiarFormulario();
+                $('texto-post').value = '';
+                return mensajeEvento(`Guardado: ${datos.event.nombre}`);
+            }
+            (datos.detalles ?? []).forEach(d => marcar(d.campo.split('.')[0], 'invalido', d.mensaje));
+            mensajeEvento(status === 409 ? 'Ya existe un evento con ese nombre y fecha de inicio.' : datos.error || `Error ${status}`, true);
+        });
+
+        $('limpiar').addEventListener('click', limpiarFormulario);
+
+        limpiarFormulario();
         cargarSesion();
     </script>
 </body>

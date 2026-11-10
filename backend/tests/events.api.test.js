@@ -1,6 +1,6 @@
 import { dbSkipReason, testDbUri } from './helpers.js';
 import assert from 'node:assert/strict';
-import { after, before, describe, it } from 'node:test';
+import { after, afterEach, before, describe, it, mock } from 'node:test';
 import bcrypt from 'bcryptjs';
 import mongoose from 'mongoose';
 import request from 'supertest';
@@ -102,6 +102,41 @@ describe('API de eventos (admin)', { skip: dbSkipReason }, () => {
         it('confirmar: true guarda', async () => {
             await admin.post(IMPORT).send({ csv, confirmar: true }).expect(200);
             assert.equal(await Event.countDocuments({ nombre: 'Beca importada' }), 1);
+        });
+    });
+
+    describe('POST /extract', () => {
+        const EXTRACT = `${URL}/extract`;
+        const texto = 'Taller de Python el 5 de diciembre en el Auditorio Central.';
+        // Simula a Gemini (no usa red ni cuota). El LLM "inventa" un enlace que no está en el texto.
+        const simularGemini = (status, obj) => mock.method(globalThis, 'fetch', async () => new Response(
+            JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify(obj) }] } }] }), { status }));
+        afterEach(() => mock.restoreAll());
+
+        it('usuario normal -> 403', async () => {
+            await user.post(EXTRACT).send({ texto }).expect(403);
+        });
+
+        it('texto vacío o demasiado largo -> 400', async () => {
+            await admin.post(EXTRACT).send({ texto: '  ' }).expect(400);
+            await admin.post(EXTRACT).send({ texto: 'x'.repeat(10_001) }).expect(400);
+        });
+
+        it('devuelve el evento con valores por defecto y marca lo que no está en el texto', async () => {
+            simularGemini(200, { nombre: 'Taller de Python', type: 'curso_extracurricular', fecha_inicio: '2026-12-05', hora: '', url_registro: 'https://inventado.pe' });
+            const res = await admin.post(EXTRACT).send({ texto }).expect(200);
+            assert.equal(res.body.evento.nombre, 'Taller de Python');
+            assert.equal(res.body.evento.origen, 'real');
+            assert.match(res.body.evento.fecha_captura, /^\d{4}-\d{2}-\d{2}$/);
+            assert.equal(res.body.evento.hora, undefined); // campo vacío del LLM -> ausente
+            assert.deepEqual(res.body.sospechosos, ['url_registro']);
+            assert.equal(await Event.countDocuments({ nombre: 'Taller de Python' }), 0); // no guarda
+        });
+
+        it('LLM caído -> 502 con mensaje claro', async () => {
+            simularGemini(500, {});
+            const res = await admin.post(EXTRACT).send({ texto }).expect(502);
+            assert.match(res.body.error, /LLM/);
         });
     });
 });

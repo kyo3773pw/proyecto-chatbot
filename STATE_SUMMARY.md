@@ -1,20 +1,21 @@
-# Estado del proyecto (2026-11-09)
+# Estado del proyecto (2026-11-10)
 
 Chatbot con RAG para eventos universitarios (congresos, becas, cursos). Rework del repo kyo3773pw/proyecto-chatbot en carpeta nueva.
 
 ## Hecho
 - **Backend** (`backend/`): Express 5 + MongoDB Atlas (M0). Auth con JWT en cookie httpOnly, roles user/admin, secretos en `.env`.
 - **Modelo Event** con reglas por tipo (beca: fecha_limite; congreso y curso: fechas del evento).
-- **Admin**: `POST/GET /api/admin/events` y carga CSV con vista previa (`/admin.html`). Spec: `specs/carga-csv.md` (hecho).
-- **Datos**: 17 eventos reales en la base (`chatbot_eventos`), 4 becas, 8 vencidos al 2026-11-09.
-- **Tests**: 52, con `npm.cmd test` en `backend/` (usa la base `chatbot_eventos_test`; los del LLM simulan la API y no gastan cuota).
+- **Admin** (`/admin.html`): carga CSV con vista previa (`specs/carga-csv.md`, hecho) y formulario de un evento con extracción desde texto por Gemini + verificación contra el texto (`specs/carga-texto-llm.md`, hecho).
+- **LLM**: `gemini-3.5-flash-lite` (500 solicitudes/día gratis), vía `fetch`; clave en `.env`. Responde a veces 503 (sobrecarga): reintentar.
+- **Datos**: 18 eventos reales en la base (`chatbot_eventos`), 4 becas.
+- **Tests**: 56, con `npm.cmd test` en `backend/` (usa la base `chatbot_eventos_test`; los del LLM simulan la API y no gastan cuota).
 
 ## Pendiente (en orden)
-1. Carga por texto pegado con LLM (`specs/carga-texto-llm.md`, en curso). Hecho: clave Gemini en `.env` (`gemini-3.5-flash-lite`, 500 solicitudes/día), `src/llm.js` (`extraerEvento`), `src/verificar-extraccion.js` (`camposNoEncontrados`), con tests. Falta: endpoint `POST /api/admin/events/extract` (traducir `LlmError` en `error.js`), formulario de revisión en `admin.html`, prueba real.
-2. Formulario de un solo evento y sugerencias de usuarios (specs futuros).
-3. Punto 3: filtro por fecha de referencia, redacción con LLM + verificación, set de ~30 preguntas.
-4. Decidir tipos `seminario` y `movilidad`. Meta de datos: ~40 reales, ≥5 becas.
-5. Completar `fuente_url` de 10 eventos (posts de LinkedIn/Facebook que solo tiene el usuario); pospuesto. El modelo no la exige.
+1. Punto 3: filtro por fecha de referencia, redacción con LLM + verificación de fechas y enlaces, set de ~30 preguntas con respuesta esperada (spec nuevo).
+2. Sugerencias de eventos por usuarios con aprobación del admin (spec futuro).
+3. Decidir tipos `seminario` y `movilidad`. Meta de datos: ~40 reales, ≥5 becas (faltan 1 beca y ~22 eventos).
+4. Completar `fuente_url` de 10 eventos (posts de LinkedIn/Facebook que solo tiene el usuario); pospuesto. El modelo no la exige.
+5. Bootcamp GitHub Agentic AI Developer (Código Facilito/Microsoft): cargar cuando publiquen fechas exactas (https://codigofacilito.com/github-ai-dev).
 
 Retirado: `data/validate_events.mjs` (2026-11-09); la vista previa de `/admin.html` valida con las reglas del modelo. Está en el historial de git (commit bf4b5be).
 

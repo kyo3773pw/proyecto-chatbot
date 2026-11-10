@@ -13,6 +13,8 @@ export function errorHandler(err, req, res, next) {
         return res.status(400).json({ error: 'Datos inválidos', detalles });
     }
     if (err.code === 11000) return res.status(409).json({ error: 'Registro duplicado' });
+    
+    if (err.name === 'LlmError') return res.status(err.status).json({ error: err.message });
 
     console.error(err);
     res.status(500).json({ error: 'Error interno', ...(config.isProduction ? {} : { detalle: err.message }) });

@@ -1,5 +1,6 @@
 # Carga de un evento desde texto pegado (LLM)
-Estado: acordado (2026-11-09)
+Estado: hecho (2026-11-10). API: `POST /api/admin/events/extract` `{ texto }` → `{ evento, sospechosos }`. Página: sección "Cargar un evento" de /admin.html (sirve también para carga manual).
+Cambios respecto de lo acordado: el prompt pide dejar vacías las fechas aproximadas ("finales de noviembre", "el martes") y copiarlas en notas; tope de 10.000 caracteres por texto. Límite conocido: la verificación por código no revisa campos de texto libre (país, modalidad, requisitos); el LLM a veces los deduce y hay que revisarlos a mano.
 
 **Problema:** el admin copia el texto de un post o póster y quiere el evento listo para revisar, sin tipear campo por campo.
 
