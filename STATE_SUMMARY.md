@@ -11,6 +11,7 @@ Chatbot con RAG para eventos universitarios (congresos, becas, cursos). Rework d
 - **Datos**: 18 eventos reales en la base (`chatbot_eventos`), 4 becas.
 - **Tests**: 88, con `npm.cmd test` en `backend/` (usa la base `chatbot_eventos_test`; los del LLM simulan la API y no gastan cuota).
 - Recetas de uso sin IA: `COMO_TRABAJAR.md`.
+- **Publicado** en https://github.com/kyo3773pw/proyecto-chatbot (rama `main`, 2026-11-16). El prototipo anterior está en las ramas `prototipo-viejo` y `prototipo-viejo-main`. Clave de Hugging Face del prototipo: revocada.
 
 ## Pendiente (en orden)
 1. Más datos: meta ~40 eventos reales y ≥5 becas (faltan 1 beca y ~22 eventos). Al crecer, ampliar `data/evaluacion.json`.
@@ -25,4 +26,3 @@ Retirado: `data/validate_events.mjs` (2026-11-09); la vista previa de `/admin.ht
 ## Entorno
 - Node portable: `F:\RESPALDO\herramientas-portables\node\node-v24.21.0-win-x64` (agregar al PATH en cada terminal; usar `npm.cmd`, PowerShell bloquea `npm.ps1`).
 - Atlas pausa el cluster por inactividad: si hay timeouts, Resume en Atlas.
-- Rotar la key de Hugging Face del repo original (pendiente del usuario).

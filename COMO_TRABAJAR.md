@@ -49,6 +49,15 @@ git commit -m "qué cambia"
 - Recuperar un archivo borrado de un commit viejo: `git checkout <código> -- ruta/archivo` (ej. el validador: `git checkout 63930c7 -- data/validate_events.mjs`)
 - Ver historial: `git log --oneline`
 
+## Publicar en GitHub
+Repo: https://github.com/kyo3773pw/proyecto-chatbot (rama `main`). Después de hacer commit:
+```
+git push
+```
+- Pide usuario y **token** (no la contraseña): GitHub → Settings → Developer settings → Personal access tokens → Fine-grained → solo este repo, permiso Contents: Read and write, vencimiento corto. El token se pega solo en la terminal.
+- Los commits salen con el email privado `88173315+kyo3773pw@users.noreply.github.com` (git config global). GitHub rechaza pushes que expongan el Gmail.
+- El prototipo anterior quedó en las ramas `prototipo-viejo` y `prototipo-viejo-main`.
+
 ## Cambiar la clave o el modelo de Gemini
 Editar `backend/.env` (`GEMINI_API_KEY`, `LLM_MODEL`) y reiniciar `npm.cmd run dev`. Límites del modelo: AI Studio → Límite de frecuencia. Si la clave se filtra: borrarla en AI Studio y crear otra.
 
