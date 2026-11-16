@@ -1,11 +1,16 @@
 # Backend – chatbot de eventos
 
-API en Express 5 + MongoDB para cargar y administrar eventos universitarios (congresos, becas, cursos). El chatbot se agrega después.
+API en Express 5 + MongoDB con un chatbot (RAG simple) sobre eventos universitarios: congresos, becas y cursos.
+
+## Cómo responde el chatbot
+1. **Recupera** de la base los eventos vigentes a la fecha `hoy` (sin embeddings: con pocos cientos de eventos, todos caben en el prompt).
+2. El **LLM elige** cuáles responden la pregunta y escribe un texto breve, sin fechas ni enlaces.
+3. El **código arma las fichas** (fechas, enlaces, estado de inscripción) desde la base. Si el texto del LLM trae fechas, enlaces o teléfonos, se descarta. Si no elige ninguno, responde "no tengo eventos que coincidan".
 
 ## Requisitos
 - Node >= 20.6 (usa `--env-file` y `node:test`).
 - Una base MongoDB (local o Atlas).
-- Opcional: una clave de Gemini (Google AI Studio) para extraer eventos desde texto. Sin ella, todo lo demás funciona.
+- Una clave de Gemini (Google AI Studio) para el chat y para extraer eventos desde texto. Sin ella, la app arranca y esas dos funciones responden "LLM no configurado".
 
 ## Configuración
 1. `npm install`
@@ -20,6 +25,9 @@ No hay endpoint para volverse admin. Registrar el usuario (`POST /api/auth/regis
 ```
 npm run make-admin -- correo@ejemplo.com
 ```
+
+## Chat
+`http://localhost:3000/chat.html` (cualquier usuario con sesión). En "Opciones de prueba" se puede fijar otra fecha `hoy` para probar con eventos pasados.
 
 ## Página de administración
 `http://localhost:3000/admin.html` (requiere sesión de admin):
@@ -38,6 +46,7 @@ npm run make-admin -- correo@ejemplo.com
 | POST | `/api/admin/events` | admin | Crea un evento (valida con el modelo `Event`). |
 | POST | `/api/admin/events/import` | admin | `{ csv, confirmar }`. Informe por fila; solo guarda si `confirmar === true`. |
 | POST | `/api/admin/events/extract` | admin | `{ texto }`. Devuelve `{ evento, sospechosos }` propuestos por el LLM; no guarda. |
+| POST | `/api/chat` | sí | `{ pregunta, hoy? }` (`hoy` = AAAA-MM-DD, por defecto hoy en Perú). Devuelve `{ texto, fichas, hoy }`. |
 
 ## Tests
 ```
@@ -45,6 +54,13 @@ npm test
 ```
 - Los de middleware, modelo, CSV y LLM no necesitan base ni clave: el LLM se simula, no se gasta cuota.
 - Los de la API necesitan `MONGODB_URI_TEST` apuntando a una base cuyo nombre contenga `test` (se vacía en cada corrida); si no está definida, se saltan.
+
+## Evaluación del chatbot
+```
+npm run eval            # todos los casos de ../data/evaluacion.json
+npm run eval -- 12 23   # solo algunos casos
+```
+Usa la base real (solo lectura) y Gemini real: ~30 solicitudes por corrida. Compara los eventos elegidos con los esperados de cada caso. Resultado al 2026-11-16: 30/32 (94 %); las fallas conocidas están anotadas en `_nota`.
 
 ## Decisiones
 Ver `../specs/` (qué se acordó en cada función) y `../STATE_SUMMARY.md` (estado y pendientes).

@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Eventos universitarios</title>
+    <style>
+        /* Colores como variables: el modo oscuro solo cambia estos valores. */
+        :root {
+            --fondo: #f5f6f8; --tarjeta: #ffffff; --texto: #1d2330; --suave: #5f6b7a; --borde: #dde1e7;
+            --primario: #2457c5; --primario-texto: #ffffff; --burbuja-bot: #ffffff;
+            --abierta: #1b7f3b; --cerrada: #b3261e; --curso: #2457c5; --proximo: #6b6f76;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --fondo: #12151b; --tarjeta: #1c2029; --texto: #e7eaf0; --suave: #9aa4b2; --borde: #2c3240;
+                --primario: #6f9bff; --primario-texto: #0b1020; --burbuja-bot: #1c2029;
+                --abierta: #5fd38a; --cerrada: #ff8a80; --curso: #8fb2ff; --proximo: #a7adb7;
+            }
+        }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: system-ui, sans-serif; background: var(--fondo); color: var(--texto); line-height: 1.45; }
+        header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px;
+                 background: var(--tarjeta); border-bottom: 1px solid var(--borde); position: sticky; top: 0; z-index: 1; }
+        header h1 { font-size: 18px; margin: 0; }
+        header small { color: var(--suave); }
+        main { max-width: 760px; margin: 0 auto; padding: 16px; padding-bottom: 120px; }
+        button { font: inherit; cursor: pointer; border-radius: 8px; border: 1px solid var(--borde); background: var(--tarjeta); color: var(--texto); padding: 6px 12px; }
+        button.primario { background: var(--primario); color: var(--primario-texto); border-color: var(--primario); }
+        button:disabled { opacity: .6; cursor: default; }
+        input, textarea { font: inherit; color: var(--texto); background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 8px; padding: 8px 10px; }
+
+        .caja { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; padding: 16px; }
+        #login form { display: grid; gap: 8px; max-width: 360px; }
+
+        .mensaje { display: flex; margin: 12px 0; }
+        .mensaje.usuario { justify-content: flex-end; }
+        .burbuja { max-width: 85%; padding: 10px 14px; border-radius: 16px; white-space: pre-wrap; }
+        .usuario .burbuja { background: var(--primario); color: var(--primario-texto); border-bottom-right-radius: 4px; }
+        .bot .burbuja { background: var(--burbuja-bot); border: 1px solid var(--borde); border-bottom-left-radius: 4px; }
+        .bot.error .burbuja { border-color: var(--cerrada); color: var(--cerrada); }
+        .pensando .burbuja { color: var(--suave); font-style: italic; }
+
+        .fichas { display: grid; gap: 10px; margin-top: 10px; }
+        .ficha { border: 1px solid var(--borde); border-radius: 12px; padding: 12px; background: var(--fondo); }
+        .ficha h3 { margin: 4px 0 6px; font-size: 16px; }
+        .ficha p { margin: 2px 0; font-size: 14px; }
+        .etiqueta { font-size: 12px; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; }
+        .estado { display: inline-block; font-size: 13px; font-weight: 600; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; margin: 4px 0; }
+        .estado.inscripcion_abierta { color: var(--abierta); } .estado.inscripcion_cerrada { color: var(--cerrada); }
+        .estado.en_curso { color: var(--curso); } .estado.proximo { color: var(--proximo); }
+        .ficha a { color: var(--primario); font-weight: 600; }
+
+        .sugerencias { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+        .sugerencias button { border-radius: 999px; font-size: 14px; }
+
+        #barra { position: fixed; left: 0; right: 0; bottom: 0; background: var(--tarjeta); border-top: 1px solid var(--borde); padding: 10px 16px; }
+        #barra form { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+        #barra textarea { flex: 1; resize: none; min-height: 42px; max-height: 120px; }
+        details { font-size: 13px; color: var(--suave); max-width: 760px; margin: 6px auto 0; }
+        [hidden] { display: none !important; }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1>Eventos universitarios</h1>
+            <small>Congresos, becas y cursos vigentes</small>
+        </div>
+        <div id="sesion" hidden><small id="usuario"></small> <a id="enlace-admin" href="/admin.html" hidden>Admin</a> <button id="salir" type="button">Salir</button></div>
+    </header>
+
+    <main>
+        <section id="login" class="caja" hidden>
+            <h2>Inicia sesión para preguntar</h2>
+            <form id="form-login">
+                <input name="email" type="email" placeholder="Email" required autocomplete="email">
+                <input name="password" type="password" placeholder="Contraseña" required autocomplete="current-password">
+                <button class="primario">Entrar</button>
+                <p id="error-login" class="etiqueta" style="color: var(--cerrada)"></p>
+            </form>
+        </section>
+
+        <section id="chat" hidden>
+            <div class="mensaje bot"><div class="burbuja">¡Hola! Pregúntame por congresos, becas o cursos y te muestro los que están vigentes.</div></div>
+            <div class="sugerencias">
+                <button type="button">¿Qué becas puedo postular?</button>
+                <button type="button">¿Hay congresos en Puno?</button>
+                <button type="button">¿Qué cursos virtuales hay?</button>
+                <button type="button">¿Qué eventos son gratuitos?</button>
+            </div>
+            <div id="conversacion" aria-live="polite"></div>
+        </section>
+    </main>
+
+    <div id="barra" hidden>
+        <form id="form-pregunta">
+            <textarea id="pregunta" rows="1" maxlength="500" placeholder="Escribe tu pregunta… (Enter para enviar)"></textarea>
+            <button class="primario" id="enviar">Enviar</button>
+        </form>
+        <details>
+            <summary>Opciones de prueba</summary>
+            <label>Responder como si hoy fuera: <input id="hoy" type="date"></label>
+            <small>(vacío = hoy)</small>
+        </details>
+    </div>
+
+    <script>
+        const $ = id => document.getElementById(id);
+        const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'set', 'oct', 'nov', 'dic'];
+        const TIPOS = { congreso: 'Congreso', beca: 'Beca', curso_extracurricular: 'Curso', otro: 'Evento' };
+        const MODALIDADES = { presencial: 'presencial', virtual: 'virtual', hibrido: 'híbrido' };
+
+        async function api(metodo, ruta, cuerpo) {
+            const res = await fetch(ruta, {
+                method: metodo,
+                headers: cuerpo ? { 'Content-Type': 'application/json' } : {},
+                body: cuerpo ? JSON.stringify(cuerpo) : undefined,
+            });
+            return { status: res.status, datos: await res.json().catch(() => ({})) };
+        }
+
+        // Crea un elemento con clase y texto. Siempre textContent: lo que llega del servidor no se interpreta como HTML.
+        function el(tag, clase, texto) {
+            const nodo = document.createElement(tag);
+            if (clase) nodo.className = clase;
+            if (texto !== undefined) nodo.textContent = texto;
+            return nodo;
+        }
+
+        // "2026-11-13" -> "13 nov 2026", sin pasar por Date para que la zona horaria no mueva el día.
+        function fechaCorta(iso) {
+            const [a, m, d] = iso.split('-').map(Number);
+            return `${d} ${MESES[m - 1]} ${a}`;
+        }
+
+        function textoFechas(f) {
+            if (f.fecha_inicio && f.fecha_fin) {
+                return f.fecha_inicio === f.fecha_fin ? fechaCorta(f.fecha_inicio) : `${fechaCorta(f.fecha_inicio)} – ${fechaCorta(f.fecha_fin)}`;
+            }
+            if (f.fecha_inicio) return `Desde ${fechaCorta(f.fecha_inicio)}`;
+            return '';
+        }
+
+        function textoEstado(f) {
+            switch (f.estado) {
+                case 'inscripcion_abierta': return `Inscripción abierta hasta el ${fechaCorta(f.fecha_limite)}`;
+                case 'inscripcion_cerrada': return 'Inscripción cerrada';
+                case 'en_curso': return 'En curso';
+                default: return 'Próximamente';
+            }
+        }
+
+        function crearFicha(f) {
+            const ficha = el('article', 'ficha');
+            ficha.append(el('div', 'etiqueta', TIPOS[f.type] ?? 'Evento'), el('h3', '', f.nombre), el('span', `estado ${f.estado}`, textoEstado(f)));
+            const fechas = textoFechas(f);
+            if (fechas) ficha.append(el('p', '', `📅 ${fechas}`));
+            const lugar = [f.lugar, MODALIDADES[f.modalidad]].filter(Boolean).join(' · ');
+            if (lugar) ficha.append(el('p', '', `📍 ${lugar}`));
+            if (f.dirigido_a) ficha.append(el('p', '', `👥 ${f.dirigido_a}`));
+            if (f.costo) ficha.append(el('p', '', `💲 ${f.costo}`));
+            if (f.contacto) ficha.append(el('p', '', `✉️ ${f.contacto}`));
+            // El modelo ya exige http(s); se revisa de nuevo para no crear nunca un enlace javascript:.
+            if (f.url_registro && /^https?:\/\//i.test(f.url_registro)) {
+                const enlace = el('a', '', 'Inscribirme →');
+                enlace.href = f.url_registro;
+                enlace.target = '_blank';
+                enlace.rel = 'noopener noreferrer';
+                const parrafo = el('p', '');
+                parrafo.append(enlace);
+                ficha.append(parrafo);
+            }
+            return ficha;
+        }
+
+        function agregarMensaje(quien, texto, fichas = [], clases = '') {
+            const fila = el('div', `mensaje ${quien} ${clases}`);
+            const burbuja = el('div', 'burbuja', texto);
+            if (fichas.length) {
+                const lista = el('div', 'fichas');
+                fichas.forEach(f => lista.append(crearFicha(f)));
+                burbuja.append(lista);
+            }
+            fila.append(burbuja);
+            $('conversacion').append(fila);
+            fila.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            return fila;
+        }
+
+        async function enviar(pregunta) {
+            pregunta = pregunta.trim();
+            if (!pregunta) return;
+            agregarMensaje('usuario', pregunta);
+            $('pregunta').value = '';
+            $('enviar').disabled = true;
+            const pensando = agregarMensaje('bot', 'Buscando eventos…', [], 'pensando');
+            try {
+                const cuerpo = { pregunta };
+                if ($('hoy').value) cuerpo.hoy = $('hoy').value;
+                const { status, datos } = await api('POST', '/api/chat', cuerpo);
+                pensando.remove();
+                if (status === 401) { agregarMensaje('bot', 'Tu sesión expiró. Vuelve a entrar.', [], 'error'); return cargarSesion(); }
+                if (status !== 200) return agregarMensaje('bot', datos.error || `Algo falló (error ${status}). Intenta de nuevo.`, [], 'error');
+                agregarMensaje('bot', datos.texto, datos.fichas);
+            } catch {
+                pensando.remove();
+                agregarMensaje('bot', 'No pude conectar con el servidor.', [], 'error');
+            } finally {
+                $('enviar').disabled = false;
+                $('pregunta').focus();
+            }
+        }
+
+        async function cargarSesion() {
+            const { status, datos } = await api('GET', '/api/auth/me');
+            const conSesion = status === 200;
+            $('login').hidden = conSesion;
+            $('chat').hidden = !conSesion;
+            $('barra').hidden = !conSesion;
+            $('sesion').hidden = !conSesion;
+            if (!conSesion) return;
+            $('usuario').textContent = datos.user.email;
+            $('enlace-admin').hidden = datos.user.role !== 'admin';
+            $('pregunta').focus();
+        }
+
+        $('form-login').addEventListener('submit', async e => {
+            e.preventDefault();
+            const { status, datos } = await api('POST', '/api/auth/login', Object.fromEntries(new FormData(e.target)));
+            $('error-login').textContent = status === 200 ? '' : (datos.error || 'No se pudo iniciar sesión');
+            if (status === 200) cargarSesion();
+        });
+
+        $('salir').addEventListener('click', async () => {
+            await api('POST', '/api/auth/logout');
+            $('conversacion').replaceChildren();
+            cargarSesion();
+        });
+
+        $('form-pregunta').addEventListener('submit', e => {
+            e.preventDefault();
+            enviar($('pregunta').value);
+        });
+
+        // Enter envía; Shift+Enter hace salto de línea.
+        $('pregunta').addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (!$('enviar').disabled) enviar($('pregunta').value);
+            }
+        });
+
+        document.querySelectorAll('.sugerencias button').forEach(b => b.addEventListener('click', () => enviar(b.textContent)));
+
+        cargarSesion();
+    </script>
+</body>
+</html>

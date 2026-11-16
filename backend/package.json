@@ -10,7 +10,8 @@
         "dev": "node --watch --env-file=.env src/server.js",
         "start": "node src/server.js",
         "test": "node --env-file=.env --test --test-concurrency=1 \"tests/*.test.js\"",
-        "make-admin": "node --env-file=.env scripts/make-admin.mjs"
+        "make-admin": "node --env-file=.env scripts/make-admin.mjs",
+        "eval": "node --env-file=.env scripts/evaluar.mjs"
     },
     "dependencies": {
         "bcryptjs": "^3.0.3",
