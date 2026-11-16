@@ -1,3 +1,4 @@
+import { elegirEventos } from './llm.js';
 import { Event } from './models/event.model.js';
 
 // "AAAA-MM-DD" -> Date a medianoche UTC, igual que mongoose guarda las fechas del CSV.
@@ -26,7 +27,20 @@ export function estadoEvento(evento, hoy) {
     return 'proximo';
 }
 
-const NO_SE = 'No tengo eventos que coincidan con tu pregunta. Prueba con otras palabras o pregunta por congresos, becas o cursos.';
+// Mensajes que son SOLO un saludo o un agradecimiento: respuesta fija, sin gastar una consulta al LLM.
+const SALUDO = /^[\s¡¿]*(hola|holi|buenas|buen[oa]s\s+(d[ií]as|tardes|noches)|hey|qu[eé]\s+tal|gracias|muchas\s+gracias|chau|adi[oó]s)[\s!¡.,?¿]*$/i;
+const RESPUESTA_SALUDO = '¡Hola! Estoy para ayudarte con eventos universitarios. Pregúntame, por ejemplo: "¿Qué becas puedo postular?" o "¿Hay congresos en Puno?"';
+
+// Todo el camino de una pregunta ya validada hasta { texto, fichas }. Lo usan el endpoint y la evaluación.
+export async function responderPregunta(pregunta, hoy) {
+    if (SALUDO.test(pregunta)) return { texto: RESPUESTA_SALUDO, fichas: [] };
+    const eventos = await eventosVigentes(hoy);
+    // Sin eventos vigentes no hay nada que elegir: "no sé" sin gastar una consulta al LLM.
+    const eleccion = eventos.length ? await elegirEventos(pregunta, eventos, hoy) : { numeros: [] };
+    return armarRespuesta(eleccion, eventos, hoy);
+}
+
+const NO_SE ='No tengo eventos que coincidan con tu pregunta. Prueba con otras palabras o pregunta por congresos, becas o cursos.';
 const TEXTO_POR_DEFECTO = 'Estos eventos coinciden con tu pregunta:';
 // Fechas ("13 de noviembre", 13/11, 2026-11-13), horas, enlaces, correos y teléfonos: el texto del LLM no debe traerlos.
 const PROHIBIDO = /\d{1,2}\s+de\s+[a-záéíóú]+|\d{1,2}\/\d{1,2}|\d{4}-\d{2}-\d{2}|\d{1,2}:\d{2}|https?:\/\/|www\.|@|\d{3}[\s-]?\d{3}[\s-]?\d{3}/i;

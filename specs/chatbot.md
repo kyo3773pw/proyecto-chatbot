@@ -1,6 +1,6 @@
 # Chatbot de eventos
 Estado: hecho (2026-11-16). API: `POST /api/chat` `{ pregunta, hoy? }` → `{ texto, fichas, hoy }`. Página: /chat.html. Evaluación: `npm run eval`, 30/32 (94 %).
-Cambios respecto de lo acordado: sin eventos vigentes no se llama al LLM; `hoy` se valida con ida y vuelta (Date acepta "2026-02-30"); pregunta máx. 500 caracteres. Fallas conocidas: el LLM a veces omite eventos relevantes cuyo nombre no usa las palabras de la pregunta (caso #12).
+Cambios respecto de lo acordado: un mensaje que es solo un saludo o agradecimiento recibe una respuesta fija sin llamar al LLM (2026-11-16); sin eventos vigentes no se llama al LLM; `hoy` se valida con ida y vuelta (Date acepta "2026-02-30"); pregunta máx. 500 caracteres. Fallas conocidas: el LLM a veces omite eventos relevantes cuyo nombre no usa las palabras de la pregunta (caso #12).
 
 **Problema:** un estudiante con sesión pregunta en lenguaje natural ("¿hay becas abiertas?") y recibe los eventos vigentes que responden, sin fechas ni enlaces inventados.
 

@@ -2,9 +2,8 @@
 // Corre las preguntas de ../data/evaluacion.json contra la base real (solo lectura) y Gemini, y compara los eventos elegidos.
 // Gasta una solicitud del LLM por caso con eventos vigentes (~30 por corrida).
 import { readFileSync } from 'node:fs';
-import { armarRespuesta, eventosVigentes } from '../src/chatbot.js';
+import { responderPregunta } from '../src/chatbot.js';
 import { connectDb, disconnectDb } from '../src/db.js';
-import { elegirEventos } from '../src/llm.js';
 
 const PAUSA_MS = 4500; // el plan gratuito permite ~15 solicitudes por minuto
 const esperar = ms => new Promise(r => setTimeout(r, ms));
@@ -13,13 +12,11 @@ const { casos } = JSON.parse(readFileSync(new URL('../../data/evaluacion.json', 
 const soloIds = process.argv.slice(2).map(Number);
 const elegidos = soloIds.length ? casos.filter(c => soloIds.includes(c.id)) : casos;
 
-// Pregunta como lo hace el endpoint; reintenta una vez si Gemini está sobrecargado (502 por un 503 de Google).
+// Misma función que el endpoint; reintenta una vez si Gemini está sobrecargado (502 por un 503 de Google).
 async function responder(caso) {
-    const eventos = await eventosVigentes(caso.hoy);
-    if (!eventos.length) return armarRespuesta({ numeros: [] }, eventos, caso.hoy);
     for (let intento = 1; ; intento++) {
         try {
-            return armarRespuesta(await elegirEventos(caso.pregunta, eventos, caso.hoy), eventos, caso.hoy);
+            return await responderPregunta(caso.pregunta, caso.hoy);
         } catch (err) {
             if (err.status !== 502 || intento === 2) throw err;
             await esperar(10_000);

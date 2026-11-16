@@ -32,7 +32,7 @@ No hay botón todavía. En Atlas: Data Explorer → Cluster02 → `chatbot_event
 
 ## Probar
 ```
-npm.cmd test          # 81 tests; no gasta cuota del LLM
+npm.cmd test          # todos los tests; no gasta cuota del LLM
 npm.cmd run eval      # evaluación del chatbot con Gemini real (~30 solicitudes de 500/día)
 npm.cmd run eval -- 12 23   # solo algunos casos
 ```

@@ -9,7 +9,7 @@ Chatbot con RAG para eventos universitarios (congresos, becas, cursos). Rework d
 - **Chatbot** (`/chat.html`, `POST /api/chat`, `specs/chatbot.md`): recupera vigentes por fecha, el LLM elige y redacta sin fechas, el código arma las fichas. Evaluación: 30/32 (94 %) con `npm run eval`.
 - **LLM**: `gemini-3.5-flash-lite` (500 solicitudes/día gratis), vía `fetch`; clave en `.env`. Responde a veces 503 (sobrecarga): reintentar.
 - **Datos**: 18 eventos reales en la base (`chatbot_eventos`), 4 becas.
-- **Tests**: 81, con `npm.cmd test` en `backend/` (usa la base `chatbot_eventos_test`; los del LLM simulan la API y no gastan cuota).
+- **Tests**: 88, con `npm.cmd test` en `backend/` (usa la base `chatbot_eventos_test`; los del LLM simulan la API y no gastan cuota).
 - Recetas de uso sin IA: `COMO_TRABAJAR.md`.
 
 ## Pendiente (en orden)

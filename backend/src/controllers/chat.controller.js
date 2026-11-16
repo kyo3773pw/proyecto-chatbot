@@ -1,7 +1,8 @@
-import { armarRespuesta, eventosVigentes, hoyEnPeru } from '../chatbot.js';
-import { elegirEventos } from '../llm.js';
+import { hoyEnPeru, responderPregunta } from '../chatbot.js';
 
 const MAX_PREGUNTA = 500;
+
+// Valida la entrada; la lógica del chat está en responderPregunta (la misma que usa `npm run eval`).
 export async function preguntar (req, res) {
     const { pregunta, hoy = hoyEnPeru() } = req.body ?? {};
     if (typeof pregunta !== 'string' || pregunta.trim() === '') {
@@ -13,12 +14,7 @@ export async function preguntar (req, res) {
     if (!fechaValida(hoy)) {
         return res.status(400).json({ error: '"hoy" debe ser una fecha AAAA-MM-DD' });
     }
-
-    const eventos = await eventosVigentes(hoy);
-    //sin eventos vigentes no hay nada que elegir: se responde "nose" sin gastar una consulta al LLM.
-    const eleccion = eventos.length ? await elegirEventos(pregunta, eventos, hoy) : {
-        numeros: [] };
-    res.json({ ...armarRespuesta(eleccion, eventos, hoy), hoy});
+    res.json({ ...(await responderPregunta(pregunta, hoy)), hoy });
 }
 
 //date acepta "2026-02-30" y lo convierte en 2 de marzo; por eso se compara la ida y vuelta.

@@ -72,6 +72,23 @@ describe('API del chat', { skip: dbSkipReason }, () => {
         assert.match(res.body.hoy, /^\d{4}-\d{2}-\d{2}$/);
     });
 
+    for (const saludo of ['hola', '¡Hola!', 'Buenos días', 'buenas tardes!!', '¿Qué tal?', 'gracias']) {
+        it(`saludo "${saludo}" -> respuesta fija sin llamar al LLM`, async () => {
+            const fetchFalso = simularGemini([1]);
+            const res = await estudiante.post(URL).send({ pregunta: saludo, hoy: '2026-11-10' }).expect(200);
+            assert.match(res.body.texto, /^¡Hola! Estoy para ayudarte/);
+            assert.deepEqual(res.body.fichas, []);
+            assert.equal(fetchFalso.mock.callCount(), 0);
+        });
+    }
+
+    it('saludo seguido de una pregunta -> sí consulta al LLM', async () => {
+        const fetchFalso = simularGemini([1]);
+        const res = await estudiante.post(URL).send({ pregunta: 'hola, ¿hay becas?', hoy: '2026-11-10' }).expect(200);
+        assert.equal(fetchFalso.mock.callCount(), 1);
+        assert.equal(res.body.fichas.length, 1);
+    });
+
     it('sin eventos vigentes -> "no sé" sin llamar al LLM', async () => {
         const fetchFalso = simularGemini([1]);
         const res = await estudiante.post(URL).send({ pregunta: '¿Hay becas?', hoy: '2030-01-01' }).expect(200);
