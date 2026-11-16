@@ -46,7 +46,7 @@ git commit -m "qué cambia"
 ```
 - Descartar cambios no guardados de un archivo: `git restore ruta/archivo`
 - Deshacer un commit ya hecho (crea uno nuevo que lo revierte): `git revert <código>`
-- Recuperar un archivo borrado de un commit viejo: `git checkout <código> -- ruta/archivo` (ej. el validador: `git checkout bf4b5be -- data/validate_events.mjs`)
+- Recuperar un archivo borrado de un commit viejo: `git checkout <código> -- ruta/archivo` (ej. el validador: `git checkout 63930c7 -- data/validate_events.mjs`)
 - Ver historial: `git log --oneline`
 
 ## Cambiar la clave o el modelo de Gemini

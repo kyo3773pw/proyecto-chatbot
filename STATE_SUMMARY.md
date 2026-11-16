@@ -20,7 +20,7 @@ Chatbot con RAG para eventos universitarios (congresos, becas, cursos). Rework d
 5. Bootcamp GitHub Agentic AI Developer (Código Facilito/Microsoft): cargar cuando publiquen fechas exactas (https://codigofacilito.com/github-ai-dev).
 6. Opcional: borrar/editar eventos desde la página (hoy es manual); embeddings cuando haya ~500 eventos; despliegue.
 
-Retirado: `data/validate_events.mjs` (2026-11-09); la vista previa de `/admin.html` valida con las reglas del modelo. Está en el historial de git (commit bf4b5be).
+Retirado: `data/validate_events.mjs` (2026-11-09); la vista previa de `/admin.html` valida con las reglas del modelo. Está en el historial de git (commit 63930c7).
 
 ## Entorno
 - Node portable: `F:\RESPALDO\herramientas-portables\node\node-v24.21.0-win-x64` (agregar al PATH en cada terminal; usar `npm.cmd`, PowerShell bloquea `npm.ps1`).
